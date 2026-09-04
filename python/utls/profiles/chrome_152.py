@@ -64,20 +64,14 @@ TRUST_ANCHOR_IDS: bytes = bytes.fromhex(
     "04d679090c"
 )
 if len(TRUST_ANCHOR_IDS) != 0xB8:
-    raise RuntimeError(
-        f"Chrome 152 trust-anchor blob length {len(TRUST_ANCHOR_IDS)} != 184"
-    )
+    raise RuntimeError(f"Chrome 152 trust-anchor blob length {len(TRUST_ANCHOR_IDS)} != 184")
 
 
 def build() -> Fingerprint:
     spec = _prev.build().to_dict()
     grease = int(Ext.GREASE)
     trust = int(Ext.trust_anchors)
-    order = [
-        int(cp)
-        for cp in spec["extensions_order"]
-        if int(cp) not in (grease, trust)
-    ]
+    order = [int(cp) for cp in spec["extensions_order"] if int(cp) not in (grease, trust)]
     order.append(trust)
     order.append(grease)
     spec["extensions_order"] = order

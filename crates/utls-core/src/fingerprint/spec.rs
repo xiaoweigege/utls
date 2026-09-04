@@ -22,7 +22,7 @@
 //! * `ech`                   - `false`, `true` (offer GREASE ECH), or `bytes` (offer real ECH config).
 //! * `padding`               - fixed extension-padding target length, or None.
 //! * `trust_anchors`         - wire-format trust-anchor IDs for extension
-//!                             `0xCA34` (Chrome 152+). `None` omits it.
+//!   `0xCA34` (Chrome 152+). `None` omits it.
 
 use std::collections::BTreeMap;
 

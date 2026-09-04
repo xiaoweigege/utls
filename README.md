@@ -42,7 +42,7 @@ Install a pre-built wheel from GitHub Releases (Linux, macOS, Windows):
 ```
 # copy the wheel URL for your platform from
 # https://github.com/xiaoweigege/utls/releases
-pip install https://github.com/xiaoweigege/utls/releases/download/2026.9.3/utls-2026.9.3-cp37-abi3-macosx_11_0_arm64.whl
+pip install https://github.com/xiaoweigege/utls/releases/download/2026.9.4/utls-2026.9.4-cp37-abi3-macosx_11_0_arm64.whl
 ```
 
 Upstream PyPI (`pip install utls`) is the original `jawah/utls` package and
