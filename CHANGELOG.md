@@ -4,13 +4,6 @@ Release History
 2026.9.4
 --------
 
-- No fingerprint change versus 2026.9.3. Fixes CI lint so the
-  multi-platform wheel job can run: clippy `doc_overindented_list_items`
-  on the `trust_anchors` docstring, and ruff-format on `chrome_152.py`.
-
-2026.9.3
---------
-
 - Added `chrome:152` profile and moved `chrome:stable` to it. Chrome 152
   is the first stable major to send the `trust_anchors` extension
   (`0xCA34`, draft-ietf-tls-trust-anchor-ids) with the Chrome Root Store

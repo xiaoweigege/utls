@@ -36,9 +36,9 @@ dependencies = [
 ]
 
 [project.urls]
-Repository  = "https://github.com/xiaoweigege/utls"
-Issues      = "https://github.com/xiaoweigege/utls/issues"
-Changelog   = "https://github.com/xiaoweigege/utls/blob/main/CHANGELOG.md"
+Repository  = "https://github.com/jawah/utls"
+Issues      = "https://github.com/jawah/utls/issues"
+Changelog   = "https://github.com/jawah/utls/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 test = [
