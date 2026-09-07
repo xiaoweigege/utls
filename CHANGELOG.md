@@ -1,6 +1,13 @@
 Release History
 ===============
 
+2026.9.7
+--------
+
+- Published on PyPI as `xutls` (`pip install xutls`). The import name is
+  still `utls`. The original `utls` name on PyPI belongs to upstream
+  `jawah/utls` and is not used by this fork.
+
 2026.9.4
 --------
 

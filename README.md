@@ -37,16 +37,16 @@ are read and merged.
 
 ### Getting Started
 
-Install a pre-built wheel from GitHub Releases (Linux, macOS, Windows):
+Install from PyPI (pre-built wheels for Linux, macOS, Windows):
 
 ```
-# copy the wheel URL for your platform from
-# https://github.com/xiaoweigege/utls/releases
-pip install https://github.com/xiaoweigege/utls/releases/download/2026.9.4/utls-2026.9.4-cp37-abi3-macosx_11_0_arm64.whl
+pip install xutls
 ```
 
+The distribution name is `xutls`; the import name is still `utls`.
 Upstream PyPI (`pip install utls`) is the original `jawah/utls` package and
-does not include these Chrome 152 changes.
+does not include these Chrome 152 changes. Do not install both `utls` and
+`xutls` in the same environment; they both provide the `utls` module.
 
 From source, initialize the BoringSSL checkout first (Chrome 152 GREASE
 in `signature_algorithms` needs a snapshot newer than the one bundled

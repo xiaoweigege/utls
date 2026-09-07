@@ -438,10 +438,12 @@ jobs:
               --repo "${{ github.repository }}"
           fi
           gh release upload "${{ github.ref_name }}" dist/* --repo "${{ github.repository }}" --clobber
-      # Upstream (jawah/utls) publishes to PyPI. Forks attach wheels to the
-      # GitHub Release only — the package name `utls` is already taken.
+      # This fork publishes as `xutls` (import name remains `utls`).
+      # Upstream `jawah/utls` owns the `utls` name on PyPI.
       - name: Publish to PyPI
-        if: github.repository == 'jawah/utls'
+        if: github.repository == 'xiaoweigege/utls'
         uses: "pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e"
         with:
-          attestations: true
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+          attestations: false
