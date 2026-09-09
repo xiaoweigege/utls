@@ -202,6 +202,7 @@ impl PyFingerprint {
         ech = None,
         padding = None,
         trust_anchors = None,
+        permute_trust_anchors = false,
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -220,6 +221,7 @@ impl PyFingerprint {
         ech: Option<Py<PyAny>>,
         padding: Option<usize>,
         trust_anchors: Option<Vec<u8>>,
+        permute_trust_anchors: bool,
     ) -> PyResult<Self> {
         let mut b = core::Fingerprint::builder()
             .cipher_suites(cipher_suites.unwrap_or_default())
@@ -234,7 +236,8 @@ impl PyFingerprint {
             .grease(grease)
             .grease_sigalgs(grease_sigalgs)
             .padding(padding)
-            .trust_anchors(trust_anchors);
+            .trust_anchors(trust_anchors)
+            .permute_trust_anchors(permute_trust_anchors);
         if let Some(names) = compress_certificate {
             let mut algs = Vec::with_capacity(names.len());
             for n in names {
@@ -263,9 +266,9 @@ impl PyFingerprint {
                 }
             })?,
         };
-        Ok(Self {
-            inner: b.ech(ech_policy).build(),
-        })
+        let inner = b.ech(ech_policy).build();
+        inner.validate().map_err(map_err)?;
+        Ok(Self { inner })
     }
 
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
