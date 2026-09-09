@@ -37,7 +37,7 @@
 use std::ffi::CString;
 use std::os::raw::c_int;
 
-use super::spec::{EchPolicy, Fingerprint, TRUST_ANCHORS_EXTENSION};
+use super::spec::{EchPolicy, Fingerprint};
 use crate::error::{Error, Result};
 
 /// Apply `fp` to `ssl`.
@@ -49,12 +49,15 @@ use crate::error::{Error, Result};
 ///
 /// # Safety
 ///
-/// `ssl` must be a non-null, live `*mut SSL` not yet in handshake.
+/// `ssl` must be a non-null, live `*mut SSL` not yet in handshake. Its SSL_CTX
+/// must be exclusive to this connection: GREASE and compression use context
+/// setters. `Context::wrap_bio` establishes this ownership before calling us.
 pub unsafe fn apply(
     fp: &Fingerprint,
     ssl: *mut boring_sys::SSL,
     alpn_override: Option<&[Vec<u8>]>,
 ) -> Result<()> {
+    fp.validate()?;
     // SAFETY: caller guarantees `ssl` is a valid, pre-handshake `*mut SSL`.
     // Each helper is itself `unsafe fn` and inherits that same invariant.
     unsafe {
@@ -253,8 +256,8 @@ unsafe fn apply_cert_compression(fp: &Fingerprint, ssl: *mut boring_sys::SSL) ->
     // BoringSSL only includes the `compress_certificate` (0x001b) extension
     // in the ClientHello when at least one algorithm has been registered on
     // the parent `SSL_CTX` via `SSL_CTX_add_cert_compression_alg`. The
-    // registration is per-CTX (not per-SSL), which is fine for utls because
-    // each fingerprint is owned by a single Context.
+    // registration is per-CTX (not per-SSL). Context::wrap_bio gives each
+    // fingerprinted connection a private native context for these settings.
     //
     // For a *client* we don't need `compress` (we never send compressed
     // certs - that direction is server-only in practice), but we **must**
@@ -390,10 +393,9 @@ unsafe fn apply_grease(fp: &Fingerprint, ssl: *mut boring_sys::SSL) -> Result<()
     // and key_share. GREASE inside `signature_algorithms` is a *separate*
     // knob (`SSL_CTX_set_grease_sigalgs_enabled`); Chrome 152+ turns it on.
     //
-    // The toggle is per-CTX, not per-SSL. Because utls's fingerprint lives
-    // on the context (one fingerprint per Context, applied to every SSL
-    // spawned from it) this is the correct granularity. A future per-SSL
-    // override would need patch 0004-grease-toggle.patch.
+    // The toggle is per-CTX, not per-SSL. Context::wrap_bio has already
+    // attached a private native context, so setting it cannot change another
+    // connection's pending handshake, even when created from an ECH fork.
     //
     // SAFETY: `ssl` is a valid pre-handshake *mut SSL; SSL_get_SSL_CTX is
     // a const accessor that never invalidates `ssl`.
@@ -547,14 +549,10 @@ unsafe fn apply_padding(_fp: &Fingerprint, _ssl: *mut boring_sys::SSL) -> Result
 
 /// Emit the `trust_anchors` (0xCA34) extension.
 ///
-/// Driven primarily by `fp.trust_anchors`. If that is `None` but
-/// `extensions_order` lists 0xCA34, we still send an empty list so the
-/// codepoint appears on the wire (JA4 counts it; an empty list is a
-/// valid "retry-flow only" advertisement).
+/// None omits it; Some(empty) explicitly advertises an empty ID list.
 unsafe fn apply_trust_anchors(fp: &Fingerprint, ssl: *mut boring_sys::SSL) -> Result<()> {
     let ids: &[u8] = match &fp.trust_anchors {
         Some(v) => v.as_slice(),
-        None if fp.extensions_order.contains(&TRUST_ANCHORS_EXTENSION) => &[],
         None => return Ok(()),
     };
     // SAFETY: `ssl` is a valid pre-handshake *mut SSL; BoringSSL copies
