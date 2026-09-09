@@ -24,8 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
-        with:
-          submodules: recursive
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -57,8 +55,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
-        with:
-          submodules: recursive
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python_version }}
@@ -99,8 +95,6 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
-        with:
-          submodules: recursive
       - uses: actions/setup-python@v6
         with:
           python-version: '3.x'
@@ -123,10 +117,6 @@ jobs:
           path: htmlcov
 
   linux:
-    # Wheel builds, GitHub Release, and PyPI happen on tags only.
-    # main / pull_request keep lint+test so a regular push does not
-    # rebuild every platform twice when we also push a tag.
-    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     needs:
       - test
@@ -158,8 +148,6 @@ jobs:
           - { target: armv7l,  manylinux: musllinux_1_1 }
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
-        with:
-          submodules: recursive
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python_version }}
@@ -262,7 +250,6 @@ jobs:
           path: dist/*.whl
 
   windows:
-    if: startsWith(github.ref, 'refs/tags/')
     needs:
       - test
       - lint
@@ -274,8 +261,6 @@ jobs:
         python_version: [ '3.10', '3.13t', '3.14t' ]
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
-        with:
-          submodules: recursive
       - uses: actions/setup-python@v6
         if: matrix.target != 'aarch64'
         with:
@@ -315,7 +300,6 @@ jobs:
           path: dist/*.whl
 
   macos:
-    if: startsWith(github.ref, 'refs/tags/')
     needs:
       - test
       - lint
@@ -327,8 +311,6 @@ jobs:
         python_version: [ '3.10', '3.13t', '3.14t' ]
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
-        with:
-          submodules: recursive
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python_version == '3.13t' && '3.13' || matrix.python_version == '3.14t' && '3.14' || matrix.python_version }}
@@ -355,15 +337,12 @@ jobs:
           path: dist/*.whl
 
   sdist:
-    if: startsWith(github.ref, 'refs/tags/')
     needs:
       - test
       - lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
-        with:
-          submodules: recursive
       - name: Build sdist
         uses: PyO3/maturin-action@v1
         with:
@@ -383,8 +362,6 @@ jobs:
       hashes: ${{ steps.compute.outputs.hashes }}
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac
-        with:
-          submodules: recursive
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -438,17 +415,8 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         run: |
-          if ! gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
-            gh release create "${{ github.ref_name }}" \
-              --title "${{ github.ref_name }}" \
-              --generate-notes \
-              --repo "${{ github.repository }}"
-          fi
-          gh release upload "${{ github.ref_name }}" dist/* --repo "${{ github.repository }}" --clobber
-      # Upstream (jawah/utls) publishes to PyPI. Forks attach wheels to the
-      # GitHub Release only — the package name `utls` is already taken.
+          gh release upload ${{ github.ref_name }} dist/* --repo ${{ github.repository }}
       - name: Publish to PyPI
-        if: github.repository == 'jawah/utls'
         uses: "pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e"
         with:
           attestations: true
