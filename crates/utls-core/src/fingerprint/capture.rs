@@ -19,7 +19,8 @@
 //! [`Error::Usage`] with a clear message; it never panics.
 
 use super::spec::{
-    CertCompressAlg, EchPolicy, Fingerprint, GREASE_EXTENSION, TRUST_ANCHORS_EXTENSION,
+    validate_trust_anchor_ids, CertCompressAlg, EchPolicy, Fingerprint, GREASE_EXTENSION,
+    TRUST_ANCHORS_EXTENSION,
 };
 use crate::error::{Error, Result};
 
@@ -130,10 +131,15 @@ fn parse_extension(ext_type: u16, body: &[u8], fp: &mut Fingerprint) -> Result<(
         // signature_algorithms
         13 => {
             let l = r.u16("signature_algorithms length")? as usize;
+            if l == 0 || l % 2 != 0 || l != r.remaining() {
+                return Err(Error::Usage("invalid signature_algorithms length".into()));
+            }
             let b = r.take(l, "signature_algorithms")?;
             for chunk in b.chunks_exact(2) {
                 let s = u16::from_be_bytes([chunk[0], chunk[1]]);
-                if !is_grease(s) {
+                if is_grease(s) {
+                    fp.grease_sigalgs = true;
+                } else {
                     fp.signature_algorithms.push(s);
                 }
             }
@@ -175,8 +181,9 @@ fn parse_extension(ext_type: u16, body: &[u8], fp: &mut Fingerprint) -> Result<(
                 }
             }
         }
-        // application_settings (ALPS, codepoint 17513)
-        17513 => {
+        // application_settings (ALPS, legacy and current codepoints)
+        17513 | 17613 => {
+            fp.alps_use_new_codepoint = ext_type == 17613;
             let l = r.u16("alps length")? as usize;
             let mut ar = Reader::new(r.take(l, "alps list")?);
             while ar.remaining() > 0 {
@@ -204,7 +211,15 @@ fn parse_extension(ext_type: u16, body: &[u8], fp: &mut Fingerprint) -> Result<(
         // trust_anchors (0xCA34): TLS body is 2-byte length + 8-bit
         // length-prefixed IDs. BoringSSL wants the inner ID list.
         x if x == TRUST_ANCHORS_EXTENSION => {
-            fp.trust_anchors = Some(parse_trust_anchor_ids(body));
+            let declared = r.u16("trust_anchors length")? as usize;
+            let ids = r.take(declared, "trust_anchors list")?;
+            if r.remaining() != 0 {
+                return Err(Error::Usage(
+                    "trailing bytes in trust_anchors extension".into(),
+                ));
+            }
+            validate_trust_anchor_ids(ids)?;
+            fp.trust_anchors = Some(ids.to_vec());
         }
         _ => {
             // Unknown / not modeled - extension is preserved in
@@ -212,19 +227,6 @@ fn parse_extension(ext_type: u16, body: &[u8], fp: &mut Fingerprint) -> Result<(
         }
     }
     Ok(())
-}
-
-/// Strip the TLS extension's outer 2-byte length prefix. A truncated or
-/// empty body becomes an empty ID list (still means "send the extension").
-fn parse_trust_anchor_ids(body: &[u8]) -> Vec<u8> {
-    if body.len() < 2 {
-        return Vec::new();
-    }
-    let declared = u16::from_be_bytes([body[0], body[1]]) as usize;
-    let rest = &body[2..];
-    rest.get(..declared.min(rest.len()))
-        .unwrap_or(rest)
-        .to_vec()
 }
 
 #[inline]
