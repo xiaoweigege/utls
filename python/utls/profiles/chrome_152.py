@@ -76,6 +76,8 @@ def build() -> Fingerprint:
     order.append(grease)
     spec["extensions_order"] = order
     spec["trust_anchors"] = TRUST_ANCHOR_IDS
+    # Chromium serializes a hash set owned by its SSL context configuration.
+    spec["permute_trust_anchors"] = True
     # Chrome 152 prepends a per-connection GREASE value to signature_algorithms.
     spec["grease_sigalgs"] = True
     spec["http_headers"] = HTTP_HEADERS
