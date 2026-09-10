@@ -53,7 +53,7 @@ checksum = "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
 [[package]]
 name = "boring-sys"
 version = "5.2.0"
-source = "git+https://github.com/cloudflare/boring?rev=931385ed41df448c82d150219f69af56e3c8399f#931385ed41df448c82d150219f69af56e3c8399f"
+source = "git+https://github.com/cloudflare/boring?rev=553d389cf309fdea5075e8fa2d2f731be67d96cc#553d389cf309fdea5075e8fa2d2f731be67d96cc"
 dependencies = [
  "bindgen",
  "cmake",

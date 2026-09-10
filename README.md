@@ -43,14 +43,6 @@ Install from PyPI (pre-built wheels for Linux, macOS, and Windows):
 pip install utls
 ```
 
-From source, initialize the BoringSSL checkout first (Chrome 152 GREASE
-in `signature_algorithms` needs a snapshot newer than the one bundled
-with `cloudflare/boring`):
-
-```
-git submodule update --init --recursive
-```
-
 Then swap `ssl` for `utls` anywhere in your code:
 
 ```python
