@@ -1,7 +1,7 @@
 Release History
 ===============
 
-2026.9.9
+2026.9.10
 --------
 
 - Added `chrome:152` profile with trust-anchor IDs and signature-algorithm GREASE; moved `chrome:stable` to it.

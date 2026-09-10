@@ -143,7 +143,7 @@ __all__ = [
     "__version__",
 ]
 
-__version__ = "2026.9.9"
+__version__ = "2026.9.10"
 
 
 def presets() -> list[str]:
